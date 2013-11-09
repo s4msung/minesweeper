@@ -1,0 +1,5 @@
+/main
+*.hi
+*.o
+*.js
+.*.sw[op]
