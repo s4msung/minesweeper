@@ -92,7 +92,22 @@ revealOverlay board overlay coord
         = case M.lookup coord (boardSquares board) of
             Just Mine     -> overlay
             Just (Hint _) -> M.insert coord Visible overlay
-            Nothing       -> let overlay' = M.insert coord Visible overlay
-                                 filterCoords = filter (`M.notMember` overlay') (neighbourCoords (boardSize board) coord)
-                             in M.unions $ map (revealOverlay board overlay') $ filterCoords
+            Nothing       -> foldr (M.insert `flip` Visible)
+                                   overlay
+                                   (emptyCoords board overlay coord)
 
+emptyCoords :: Board -> OverlayMap -> Coord -> [Coord]
+emptyCoords board overlay coord
+    | isEmpty coord = emptyCoords' [coord] [coord]
+    | otherwise     = []
+  where
+    emptyCoords' found [] = found
+    emptyCoords' found (c:cs) =
+        let unknown = filter isUnknown $
+                             neighbourCoords (boardSize board) c
+            reveal  = filter isEmpty unknown
+            found'  = found ++ unknown
+         in emptyCoords' found' (reveal ++ cs)
+      where
+        isUnknown c' = c' `notElem` found && c' `M.notMember` overlay
+    isEmpty c' = isNothing $ M.lookup c' (boardSquares board)
