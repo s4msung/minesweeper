@@ -13,7 +13,6 @@ module Board
     ) where
 
 import           Data.List      (nub)
-import           Data.Maybe     (isNothing)
 import qualified Data.Map       as M
 import           System.Random  (mkStdGen, randomRs)
 
@@ -63,7 +62,7 @@ neighbours dim smap coord = countNeighbours $ neighbourCoords dim coord
 addHints :: Dimension -> SquareMap -> SquareMap
 addHints dim smap = add $ filter ((> 0) . fst) $ zip (map (neighbours dim smap) allC) allC
     where
-        allC = filter (isNothing . ((flip M.lookup) smap)) $ allCoords dim
+        allC = filter (`M.notMember` smap) $ allCoords dim
         add []                 = smap
         add ((hint, coord):xs) = M.insert coord (Hint hint) $ add xs
 
@@ -110,4 +109,4 @@ emptyCoords board overlay coord
          in emptyCoords' found' (reveal ++ cs)
       where
         isUnknown c' = c' `notElem` found && c' `M.notMember` overlay
-    isEmpty c' = isNothing $ M.lookup c' (boardSquares board)
+    isEmpty c' = c' `M.notMember` (boardSquares board)
